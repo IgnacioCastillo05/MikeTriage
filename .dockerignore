@@ -1,0 +1,13 @@
+**/target/
+**/logs/
+**/.git/
+**/.idea/
+**/.vscode/
+**/*.log
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/node_modules/
+**/data/raw/
+**/data/processed/
+**/data/training/

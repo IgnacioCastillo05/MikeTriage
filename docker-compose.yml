@@ -1,0 +1,36 @@
+services:
+
+  mike-python:
+    build:
+      context: ./MikePY/python-service
+      dockerfile: Dockerfile
+    container_name: mike-python
+    restart: always
+    ports:
+      - "8085:8085"
+    networks:
+      - mike-network
+
+  mike-java:
+    build:
+      context: ./java-spring
+      dockerfile: Dockerfile
+    container_name: mike-java
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MONGODB_URI: mongodb://admin:secret@mongodb:27017/ecibethistorical
+      PYTHON_SERVICE_URL: http://mike-python:8085
+    depends_on:
+      - mike-python
+    networks:
+      - mike-network
+
+networks:
+  mike-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

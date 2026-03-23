@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: mike-ai-agent
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      auto-index-creation: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    connection-timeout: 5000
+
+server:
+  port: ${SERVER_PORT:8084}
+
+logging:
+  level:
+    com.ecibet.mike: ${LOG_LEVEL:INFO}
+    org.springframework.data.mongodb: WARN
+    org.springframework.amqp: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+ecibet:
+  mike:
+    python-service:
+      url: ${PYTHON_SERVICE_URL}
+      timeout: 5000
+
+    sportdb:
+      api-key: ${SPORTDB_API_KEY}
+      base-url: ${SPORTDB_BASE_URL}
+
+    rabbitmq:
+      exchanges:
+        match-events: match.events.topic
+        odds-updated: odds.updated.topic
+      queues:
+        mike-match-queue: mike.match.queue
+      routing-keys:
+        match-all: match.events.*
+        odds-updated: odds.updated.*
+
+    gpt:
+      feature-moments:
+        - minute: 10
+        - minute: 40
+        - minute: 45
+        - minute: 80
+      extra-triggers:
+        - GOAL
+        - RED_CARD
+        - HALFTIME
+        - STATUS_CHANGE
