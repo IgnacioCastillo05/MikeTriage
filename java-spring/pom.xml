@@ -99,10 +99,10 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>java-spring/src/main/java</sourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
         <resources>
             <resource>
-                <directory>java-spring/src/resources</directory>
+                <directory>src/resources</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>

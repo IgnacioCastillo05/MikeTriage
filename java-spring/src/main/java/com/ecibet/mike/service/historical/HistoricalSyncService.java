@@ -3,7 +3,6 @@ package com.ecibet.mike.service.historical;
 import com.ecibet.mike.model.dto.sportdb.LeagueTableResponse;
 import com.ecibet.mike.model.dto.sportdb.SeasonEventsResponse;
 import com.ecibet.mike.model.dto.sportdb.TeamResponse;
-import com.ecibet.mike.model.dto.sportdb.LeagueResponse;
 import com.ecibet.mike.model.dto.sportdb.AllLeaguesResponse;
 import com.ecibet.mike.model.mongodb.HistoricalMatch;
 import com.ecibet.mike.model.mongodb.Team;
@@ -108,6 +107,8 @@ public class HistoricalSyncService {
                         if (eventsResponse != null && eventsResponse.getEvents() != null) {
                             for (SeasonEventsResponse.EventEntry event : eventsResponse.getEvents()) {
                                 HistoricalMatch match = dataProcessor.processMatchEvent(event, leagueId, season);
+                                match.setSyncVersion("sportdb_v1");
+                                match.setSyncStatus("COMPLETED");
                                 if (!historicalMatchRepository.existsByExternalId(match.getExternalId())) {
                                     historicalMatchRepository.save(match);
                                     matchesCount++;
@@ -197,6 +198,8 @@ public class HistoricalSyncService {
                     if (eventsResponse != null && eventsResponse.getEvents() != null) {
                         for (SeasonEventsResponse.EventEntry event : eventsResponse.getEvents()) {
                             HistoricalMatch match = dataProcessor.processMatchEvent(event, leagueId, currentSeason);
+                            match.setSyncVersion("sportdb_v1");
+                            match.setSyncStatus("COMPLETED");
                             if (!historicalMatchRepository.existsByExternalId(match.getExternalId())) {
                                 historicalMatchRepository.save(match);
                                 matchesCount++;
@@ -307,6 +310,8 @@ public class HistoricalSyncService {
                         if (eventsResponse != null && eventsResponse.getEvents() != null) {
                             for (SeasonEventsResponse.EventEntry event : eventsResponse.getEvents()) {
                                 HistoricalMatch match = dataProcessor.processMatchEvent(event, leagueId, season);
+                                match.setSyncVersion("sportdb_v1");
+                                match.setSyncStatus("COMPLETED");
                                 if (!historicalMatchRepository.existsByExternalId(match.getExternalId())) {
                                     historicalMatchRepository.save(match);
                                     matchesCount++;

@@ -1,109 +1,26 @@
 package com.ecibet.mike.service.historical;
 
-import com.ecibet.mike.model.dto.sportdb.AllLeaguesResponse;
 import com.ecibet.mike.model.dto.sportdb.LeagueTableResponse;
 import com.ecibet.mike.model.dto.sportdb.SeasonEventsResponse;
 import com.ecibet.mike.model.dto.sportdb.TeamResponse;
+import com.ecibet.mike.model.dto.sportdb.AllLeaguesResponse;
 import com.ecibet.mike.model.mongodb.HistoricalMatch;
+import com.ecibet.mike.model.mongodb.Team;
 import com.ecibet.mike.model.mongodb.League;
 import com.ecibet.mike.model.mongodb.Standing;
-import com.ecibet.mike.model.mongodb.Team;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.util.List;
 
 @Slf4j
-@Service
+@Component
 public class DataProcessor {
 
-    public HistoricalMatch processLeagueStanding(LeagueTableResponse.LeagueTableEntry entry, String leagueId, String season) {
-        HistoricalMatch standing = new HistoricalMatch();
-
-        standing.setExternalId(entry.getIdStanding());
-        standing.setHomeTeam(entry.getStrTeam());
-        standing.setAwayTeam("");
-        standing.setHomeScore(0);
-        standing.setAwayScore(0);
-        standing.setCompetition(entry.getStrLeague());
-        standing.setCompetitionId(leagueId);
-        standing.setSeason(season);
-        standing.setMatchType("STANDING");
-
-
-        standing.setHomePosition(entry.getIntRank());
-        standing.setHomeForm(entry.getStrForm());
-        standing.setHomePoints(entry.getIntPoints());
-        standing.setHomePlayed(entry.getIntPlayed());
-        standing.setHomeWins(entry.getIntWin());
-        standing.setHomeDraws(entry.getIntDraw());
-        standing.setHomeLosses(entry.getIntLoss());
-        standing.setHomeGoalsFor(entry.getIntGoalsFor());
-        standing.setHomeGoalsAgainst(entry.getIntGoalsAgainst());
-        standing.setHomeGoalDifference(entry.getIntGoalDifference());
-
-        standing.setMatchDate(parseDate(entry.getDateUpdated()));
-        standing.setStatus("FINISHED");
-
-        standing.setSyncedAt(LocalDateTime.now());
-        standing.setSyncVersion("v1");
-        standing.setSyncStatus("COMPLETED");
-
-        standing.setCreatedAt(LocalDateTime.now());
-        standing.setUpdatedAt(LocalDateTime.now());
-
-        return standing;
-    }
-
-    public HistoricalMatch processMatchEvent(SeasonEventsResponse.EventEntry event, String leagueId, String season) {
-        HistoricalMatch match = new HistoricalMatch();
-
-        match.setExternalId(event.getIdEvent());
-        match.setHomeTeam(event.getStrHomeTeam());
-        match.setAwayTeam(event.getStrAwayTeam());
-        match.setHomeScore(parseInt(event.getIntHomeScore()));
-        match.setAwayScore(parseInt(event.getIntAwayScore()));
-        match.setCompetition(event.getStrLeague());
-        match.setCompetitionId(leagueId);
-        match.setSeason(season);
-        match.setMatchType("MATCH");  // Nuevo campo para identificar tipo
-
-        match.setMatchDate(parseDate(event.getDateEvent()));
-        match.setStatus(event.getStrStatus() != null ? event.getStrStatus() : "FINISHED");
-
-        match.setSyncedAt(LocalDateTime.now());
-        match.setSyncVersion("v1");
-        match.setSyncStatus("COMPLETED");
-
-        match.setCreatedAt(LocalDateTime.now());
-        match.setUpdatedAt(LocalDateTime.now());
-
-        return match;
-    }
-
-    private Integer parseInt(String value) {
-        if (value == null || value.isEmpty()) return 0;
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-    private LocalDate parseDate(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
-            return LocalDate.now();
-        }
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            return LocalDate.parse(dateString, formatter);
-        } catch (Exception e) {
-            return LocalDate.now();
-        }
-    }
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public League processLeague(AllLeaguesResponse.LeagueEntry entry) {
         League league = new League();
@@ -174,5 +91,42 @@ public class DataProcessor {
         standing.setGoalDifference(entry.getIntGoalDifference());
         standing.setPoints(entry.getIntPoints());
         return standing;
+    }
+
+    public HistoricalMatch processMatchEvent(SeasonEventsResponse.EventEntry event, String leagueId, String season) {
+        HistoricalMatch match = new HistoricalMatch();
+        match.setExternalId(event.getIdEvent());
+        match.setHomeTeam(event.getStrHomeTeam());
+        match.setAwayTeam(event.getStrAwayTeam());
+
+        if (event.getIntHomeScore() != null && !event.getIntHomeScore().isEmpty()) {
+            match.setHomeScore(Integer.parseInt(event.getIntHomeScore()));
+        }
+        if (event.getIntAwayScore() != null && !event.getIntAwayScore().isEmpty()) {
+            match.setAwayScore(Integer.parseInt(event.getIntAwayScore()));
+        }
+
+        match.setCompetition(event.getStrLeague());
+        match.setCompetitionId(leagueId);
+        match.setSeason(season);
+
+        if (event.getDateEvent() != null && !event.getDateEvent().isEmpty()) {
+            try {
+                LocalDate date = LocalDate.parse(event.getDateEvent(), DATE_FORMATTER);
+                match.setMatchDate(date);
+            } catch (Exception e) {
+                log.warn("Error parsing date: {}", event.getDateEvent());
+            }
+        }
+
+        match.setStatus(event.getStrStatus());
+        match.setMatchType("MATCH");
+        match.setSyncedAt(LocalDateTime.now());
+        match.setSyncVersion("sportdb_v1");
+        match.setSyncStatus("COMPLETED");
+        match.setCreatedAt(LocalDateTime.now());
+        match.setUpdatedAt(LocalDateTime.now());
+
+        return match;
     }
 }

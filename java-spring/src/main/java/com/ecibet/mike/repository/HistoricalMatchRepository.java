@@ -4,7 +4,6 @@ import com.ecibet.mike.model.mongodb.HistoricalMatch;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,9 +14,13 @@ public interface HistoricalMatchRepository extends MongoRepository<HistoricalMat
 
     boolean existsByExternalId(String externalId);
 
-    List<HistoricalMatch> findByMatchDateAfter(LocalDate date);
+    List<HistoricalMatch> findByCompetition(String competition);
 
-    List<HistoricalMatch> findByMatchDateBetween(LocalDate start, LocalDate end);
+    List<HistoricalMatch> findByCompetitionAndSeason(String competition, String season);
 
-    List<HistoricalMatch> findByHomeTeamAndAwayTeam(String homeTeam, String awayTeam);
+    List<HistoricalMatch> findByHomeTeam(String teamName);
+
+    List<HistoricalMatch> findByAwayTeam(String teamName);
+
+    long countBySyncVersion(String syncVersion);
 }

@@ -1,5 +1,6 @@
 package com.ecibet.mike.controller;
 
+import com.ecibet.mike.model.dto.MatchEventDTO;
 import com.ecibet.mike.model.dto.OddsUpdateEventDTO;
 import com.ecibet.mike.service.prediction.OddsPredictionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,13 +19,14 @@ public class OddsPredictionController {
 
     private final OddsPredictionService oddsPredictionService;
 
-    @PostMapping("/force/{eventId}")
+    @PostMapping("/force")
     @Operation(summary = "Forzar predicción para un partido")
     public ResponseEntity<OddsUpdateEventDTO> forcePrediction(
-            @PathVariable String eventId,
+            @RequestBody MatchEventDTO event,
             @RequestParam boolean useGptFeatures) {
-        log.info("Forzando predicción para eventId: {}, useGptFeatures: {}", eventId, useGptFeatures);
-        OddsUpdateEventDTO result = oddsPredictionService.forcePrediction(eventId, useGptFeatures);
+        log.info("Forzando predicción para: {} vs {}, useGptFeatures: {}",
+                event.getHomeTeam(), event.getAwayTeam(), useGptFeatures);
+        OddsUpdateEventDTO result = oddsPredictionService.forcePrediction(event, useGptFeatures);
         return ResponseEntity.ok(result);
     }
 

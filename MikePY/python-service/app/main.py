@@ -1,24 +1,37 @@
 ﻿from fastapi import FastAPI
+from app.api.routes import predict, train, kaggle
+import logging
 
-app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Mike Python Service", version="2.0.0")
+
+app.include_router(predict.router, prefix="/api/v1", tags=["predictions"])
+app.include_router(train.router, prefix="/api/v1", tags=["training"])
+app.include_router(kaggle.router, prefix="/api/v1/kaggle", tags=["kaggle"])
 
 @app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-@app.get("/")
-def root():
-    return {"message": "Mike Python Service"}
-
-@app.post("/api/v1/train/rf")
-async def train_random_forest():
+async def health():
     return {
-        "status": "success",
-        "message": "Modelos entrenados exitosamente",
-        "models_saved": ["rf_1x2_home.pkl", "rf_1x2_draw.pkl", "rf_1x2_away.pkl", "rf_over25.pkl", "scaler.pkl"],
-        "timestamp": "2026-03-23T00:00:00"
+        "status": "healthy",
+        "service": "mike-python",
+        "version": "2.0.0"
     }
 
-@app.get("/api/v1/predict/health")
-def predict_health():
-    return {"status": "healthy", "rf_loaded": False, "gpt_available": False}
+@app.get("/")
+async def root():
+    return {
+        "service": "Mike Python Service",
+        "version": "2.0.0",
+        "endpoints": [
+            "/health",
+            "/api/v1/predict/prematch",
+            "/api/v1/predict/live",
+            "/api/v1/predict/health",
+            "/api/v1/train/rf",
+            "/api/v1/train/status",
+            "/api/v1/kaggle/import",
+            "/api/v1/kaggle/status"
+        ]
+    }

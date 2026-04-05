@@ -12,8 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
@@ -44,36 +42,6 @@ public class HistoricalMatch {
     private LocalDate matchDate;
     private String status;
     private String matchType;
-
-    private Integer homePossession;
-    private Integer awayPossession;
-    private Integer homeShotsOnTarget;
-    private Integer awayShotsOnTarget;
-    private Integer homeShotsOffTarget;
-    private Integer awayShotsOffTarget;
-    private Integer homeCorners;
-    private Integer awayCorners;
-    private Integer homeFouls;
-    private Integer awayFouls;
-    private Integer homeYellowCards;
-    private Integer awayYellowCards;
-    private Integer homeRedCards;
-    private Integer awayRedCards;
-
-    private List<Map<String, Object>> timeline;
-
-    private Map<String, Double> historicalOdds;
-
-    private Integer homePosition;
-    private String homeForm;
-    private Integer homePoints;
-    private Integer homePlayed;
-    private Integer homeWins;
-    private Integer homeDraws;
-    private Integer homeLosses;
-    private Integer homeGoalsFor;
-    private Integer homeGoalsAgainst;
-    private Integer homeGoalDifference;
 
     private LocalDateTime syncedAt;
     private String syncVersion;

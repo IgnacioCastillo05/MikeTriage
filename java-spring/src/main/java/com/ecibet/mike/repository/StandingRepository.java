@@ -17,4 +17,6 @@ public interface StandingRepository extends MongoRepository<Standing, String> {
     List<Standing> findByLeagueIdAndSeason(String leagueId, String season);
 
     List<Standing> findByTeamId(String teamId);
+
+    Optional<Standing> findByTeamNameAndLeagueIdAndSeason(String teamName, String leagueId, String season);
 }

@@ -7,7 +7,7 @@ services:
     container_name: mike-python
     restart: always
     ports:
-      - "8085:8085"
+      - "8087:8087"
     networks:
       - mike-network
 
@@ -18,7 +18,7 @@ services:
     container_name: mike-java
     restart: always
     ports:
-      - "8084:8084"
+      - "8086:8086"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       MONGODB_URI: mongodb://admin:secret@mongodb:27017/ecibethistorical

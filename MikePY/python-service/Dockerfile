@@ -6,6 +6,6 @@ COPY app/ /app/
 
 WORKDIR /app
 
-EXPOSE 8085
+EXPOSE 8087
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8085"]
