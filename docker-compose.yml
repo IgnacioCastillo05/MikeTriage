@@ -1,36 +1,29 @@
+version: '3.8'
+
 services:
-
-  mike-python:
-    build:
-      context: ./MikePY/python-service
-      dockerfile: Dockerfile
-    container_name: mike-python
-    restart: always
+  mike-triage:
+    build: .
     ports:
-      - "8087:8087"
-    networks:
-      - mike-network
-
-  mike-java:
-    build:
-      context: ./java-spring
-      dockerfile: Dockerfile
-    container_name: mike-java
-    restart: always
-    ports:
-      - "8086:8086"
+      - "8000:8000"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      MONGODB_URI: mongodb://admin:secret@mongodb:27017/ecibethistorical
-      PYTHON_SERVICE_URL: http://mike-python:8085
+      - TRIAGE_MODELS_PATH=/app/models/triaje
+      - SYNTHEA_OUTPUT_PATH=/app/data/synthetic
+      - MONGODB_URI=mongodb://mongodb:27017/
+      - MONGODB_DATABASE=mike_triage
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
     depends_on:
-      - mike-python
-    networks:
-      - mike-network
+      - mongodb
+    restart: unless-stopped
 
-networks:
-  mike-network:
-    driver: bridge
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
 
 volumes:
   mongodb_data:
