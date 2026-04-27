@@ -3,9 +3,6 @@ import logging
 from datetime import datetime
 from typing import Dict, Any, Optional
 from ..ml.triage_predictor import triage_predictor
-from ..ml.triage_trainer import triage_trainer
-from ..data.triage_dataset_loader import triage_dataset_loader
-from ..data.synthea_generator import synthea_generator
 from ..config.triage_settings import settings
 
 router = APIRouter()
@@ -52,8 +49,6 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
             "nivel_triage": nivel,
             "descripcion_triage": descripcion,
             "timestamp": datetime.utcnow().isoformat() + "Z",
-
-            # Campos que necesita Triage
             "nivel_sugerido": nivel,
             "confianza": confianza,
             "comentarios": descripcion,
@@ -72,6 +67,10 @@ async def train_triage():
     logger.info("Entrenamiento de modelo de triaje iniciado")
 
     try:
+        from ..ml.triage_trainer import triage_trainer
+        from ..data.triage_dataset_loader import triage_dataset_loader
+        from ..data.synthea_generator import synthea_generator
+
         fedmll_cases = triage_dataset_loader.load_fedmll_triage()
         synthea_cases = synthea_generator.generate_patients(500)
         all_cases = fedmll_cases + synthea_cases
@@ -99,5 +98,4 @@ async def triage_health():
     return {
         "status": "healthy",
         "model_loaded": triage_predictor.model is not None,
-        "models_path": str(triage_trainer.models_path)
     }
