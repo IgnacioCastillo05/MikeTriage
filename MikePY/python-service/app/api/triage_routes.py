@@ -1,18 +1,25 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from ..ml.triage_predictor import triage_predictor
 from ..ml.triage_trainer import triage_trainer
 from ..data.triage_dataset_loader import triage_dataset_loader
 from ..data.synthea_generator import synthea_generator
+from ..config.triage_settings import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _validate_api_key(x_api_key: Optional[str]):
+    if settings.CLASSIFIER_API_KEY and x_api_key != settings.CLASSIFIER_API_KEY:
+        raise HTTPException(status_code=401, detail="API key inválida o ausente")
+
+
 @router.post("/predict/triage")
-async def predict_triage(request: Dict[str, Any]):
+async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Header(None)):
+    _validate_api_key(x_api_key)
     logger.info("Prediccion de triaje solicitada")
 
     try:
@@ -53,6 +60,8 @@ async def predict_triage(request: Dict[str, Any]):
             "probabilidades": probs,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error en prediccion de triaje: {e}")
         raise HTTPException(status_code=500, detail=str(e))
