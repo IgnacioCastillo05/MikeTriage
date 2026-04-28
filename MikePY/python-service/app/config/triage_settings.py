@@ -40,5 +40,7 @@ class TriageSettings:
     
     SYNTHEA_OUTPUT_PATH = os.getenv("SYNTHEA_OUTPUT_PATH", 
                                     str(Path(__file__).resolve().parent.parent.parent / "data" / "synthetic"))
+    
+    CLASSIFIER_API_KEY = os.getenv("CLASSIFIER_API_KEY", "")
 
 settings = TriageSettings()
