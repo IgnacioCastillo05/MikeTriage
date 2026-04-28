@@ -4,7 +4,7 @@ services:
   mike-triage:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
       - TRIAGE_MODELS_PATH=/app/models/triaje
       - SYNTHEA_OUTPUT_PATH=/app/data/synthetic
