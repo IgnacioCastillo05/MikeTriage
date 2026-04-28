@@ -20,7 +20,14 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
     logger.info("Prediccion de triaje solicitada")
 
     try:
-        triage_data = request.get("triage_data", {})
+        # Soporta: triage_data (formato antiguo ISISvoice),
+        #           preliminary_history (formato nuevo ISISvoice),
+        #           payload directo normalizado (lo que envía Triage)
+        triage_data = (
+            request.get("triage_data")
+            or request.get("preliminary_history")
+            or {}
+        )
         vital_signs = request.get("vital_signs", {})
 
         if not triage_data:
@@ -30,7 +37,7 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
             triage_data["vital_signs"] = vital_signs
 
         if "sintomas" not in triage_data:
-            transcript = triage_data.get("transcript", "")
+            transcript = request.get("transcript", "") or triage_data.get("transcript", "")
             if transcript:
                 triage_data["sintomas"] = [transcript]
                 triage_data["comentario"] = transcript
@@ -43,9 +50,12 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
         probabilidades = result.get("probabilidades", {})
         probs = {f"nivel_{i}": probabilidades.get(f"nivel_{i}", 0.0) for i in range(1, 6)}
 
+        # Soporta patient_id (nuevo) y patient_cedula (antiguo)
+        patient_ref = request.get("patient_id") or request.get("patient_cedula")
+
         return {
             "procedure_id": request.get("procedure_id"),
-            "patient_cedula": request.get("patient_cedula"),
+            "patient_id": patient_ref,
             "nivel_triage": nivel,
             "descripcion_triage": descripcion,
             "timestamp": datetime.utcnow().isoformat() + "Z",
