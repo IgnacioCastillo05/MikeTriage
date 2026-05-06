@@ -20,10 +20,16 @@ class TriagePredictor:
     def load(self):
         model_path = os.path.join(self.models_path, "rf_triage.pkl")
         scaler_path = os.path.join(self.models_path, "scaler_triage.pkl")
+        vectorizer_path = os.path.join(self.models_path, "vectorizer_triage.pkl")
         
         if os.path.exists(model_path) and os.path.exists(scaler_path):
             self.model = joblib.load(model_path)
             self.scaler = joblib.load(scaler_path)
+            if os.path.exists(vectorizer_path):
+                symptom_encoder.load(vectorizer_path)
+                logger.info("Vectorizador de síntomas cargado correctamente")
+            else:
+                logger.warning("vectorizer_triage.pkl no encontrado - se usará symptom_count")
             logger.info("Modelo de triaje cargado correctamente")
             return True
         else:

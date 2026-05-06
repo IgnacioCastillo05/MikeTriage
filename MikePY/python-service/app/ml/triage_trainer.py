@@ -24,6 +24,18 @@ class TriageTrainer:
         self.models_path = settings.MODELS_PATH
         
     def prepare_training_data(self, cases: List[Dict[str, Any]]) -> tuple:
+        all_symptoms_text = []
+        for case in cases:
+            symptoms = case.get("sintomas", [])
+            if isinstance(symptoms, list):
+                all_symptoms_text.append(" ".join(symptoms))
+            elif isinstance(symptoms, str):
+                all_symptoms_text.append(symptoms)
+        
+        if all_symptoms_text:
+            symptom_encoder.fit(all_symptoms_text)
+            logger.info(f"Vectorizador ajustado con {len(all_symptoms_text)} muestras")
+
         features_list = []
         labels = []
         
@@ -79,6 +91,11 @@ class TriageTrainer:
         
         joblib.dump(self.model, os.path.join(self.models_path, "rf_triage.pkl"))
         joblib.dump(self.scaler, os.path.join(self.models_path, "scaler_triage.pkl"))
+        
+        if symptom_encoder.vectorizer:
+            vectorizer_path = os.path.join(self.models_path, "vectorizer_triage.pkl")
+            symptom_encoder.save(vectorizer_path)
+            logger.info(f"Vectorizador guardado en {vectorizer_path}")
         
         return {
             "train_accuracy": train_acc,
