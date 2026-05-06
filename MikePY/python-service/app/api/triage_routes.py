@@ -8,10 +8,32 @@ from ..config.triage_settings import settings
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+_VITALS_ES_TO_EN = {
+    "temperatura": "temperature_c",
+    "frecuencia_cardiaca": "heart_rate_bpm",
+    "frecuencia_respiratoria": "respiratory_rate_bpm",
+    "saturacion_oxigeno": "oxygen_saturation_pct",
+    "presion_sistolica": "systolic_bp_mmhg",
+    "presion_diastolica": "diastolic_bp_mmhg",
+}
+
 
 def _validate_api_key(x_api_key: Optional[str]):
     if settings.CLASSIFIER_API_KEY and x_api_key != settings.CLASSIFIER_API_KEY:
         raise HTTPException(status_code=401, detail="API key inválida o ausente")
+
+
+def _normalize_vital_signs(triage_data: Dict[str, Any]) -> None:
+    """Map flat Spanish field names to vital_signs dict if not already present."""
+    if triage_data.get("vital_signs"):
+        return
+    mapped = {
+        en_key: triage_data[es_key]
+        for es_key, en_key in _VITALS_ES_TO_EN.items()
+        if es_key in triage_data and triage_data[es_key] is not None
+    }
+    if mapped:
+        triage_data["vital_signs"] = mapped
 
 
 @router.post("/predict/triage")
@@ -20,9 +42,6 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
     logger.info("Prediccion de triaje solicitada")
 
     try:
-        # Soporta: triage_data (formato antiguo ISISvoice),
-        #           preliminary_history (formato nuevo ISISvoice),
-        #           payload directo normalizado (lo que envía Triage)
         triage_data = (
             request.get("triage_data")
             or request.get("preliminary_history")
@@ -42,6 +61,8 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
                 triage_data["sintomas"] = [transcript]
                 triage_data["comentario"] = transcript
 
+        _normalize_vital_signs(triage_data)
+
         result = triage_predictor.predict(triage_data)
 
         nivel = result["nivel_triage"]
@@ -50,7 +71,6 @@ async def predict_triage(request: Dict[str, Any], x_api_key: Optional[str] = Hea
         probabilidades = result.get("probabilidades", {})
         probs = {f"nivel_{i}": probabilidades.get(f"nivel_{i}", 0.0) for i in range(1, 6)}
 
-        # Soporta patient_id (nuevo) y patient_cedula (antiguo)
         patient_ref = request.get("patient_id") or request.get("patient_cedula")
 
         return {

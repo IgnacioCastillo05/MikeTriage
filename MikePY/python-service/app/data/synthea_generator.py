@@ -3,6 +3,7 @@ import logging
 import subprocess
 import json
 import os
+import random
 import pandas as pd
 from typing import List, Dict, Any
 from ..config.triage_settings import settings
