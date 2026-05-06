@@ -15,6 +15,8 @@ _VITALS_ES_TO_EN = {
     "saturacion_oxigeno": "oxygen_saturation_pct",
     "presion_sistolica": "systolic_bp_mmhg",
     "presion_diastolica": "diastolic_bp_mmhg",
+    "peso_kg": "weight_kg",
+    "altura_cm": "height_cm",
 }
 
 
@@ -110,6 +112,7 @@ async def train_triage():
 
         X, y = triage_trainer.prepare_training_data(all_cases)
         result = triage_trainer.train(X, y)
+        triage_predictor.load()
 
         return {
             "status": "success",

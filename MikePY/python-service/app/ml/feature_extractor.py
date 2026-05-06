@@ -18,25 +18,38 @@ class TriageFeatureExtractor:
             "oxygen_saturation_pct": (95, 100)
         }
         
+    _FIXED_VITALS = [
+        "temperature_c",
+        "heart_rate_bpm",
+        "respiratory_rate_bpm",
+        "systolic_bp_mmhg",
+        "diastolic_bp_mmhg",
+        "oxygen_saturation_pct",
+        "weight_kg",
+        "height_cm",
+    ]
+        
     def extract_features(self, triage_data: Dict[str, Any]) -> np.ndarray:
         features = {}
         symptoms = triage_data.get("sintomas", [])
         if isinstance(symptoms, str):
             symptoms = [symptoms]
-            
+
         if self.symptom_encoder.vectorizer:
             symptom_vector = self.symptom_encoder.transform(symptoms)[0]
             for i, val in enumerate(symptom_vector):
                 features[f"symptom_{i}"] = val
         else:
             features["symptom_count"] = len(symptoms)
-            
+
         emergency_flags = self.symptom_encoder.extract_emergency_flags(symptoms)
         features.update(emergency_flags)
-        
+
         vital_signs = triage_data.get("vital_signs", {})
-        for vital, value in vital_signs.items():
-            features[f"{vital}"] = value
+
+        for vital in _FIXED_VITALS:
+            value = vital_signs.get(vital, 0.0)
+            features[vital] = value
             if vital in self.normal_ranges:
                 min_norm, max_norm = self.normal_ranges[vital]
                 if value < min_norm:
@@ -44,28 +57,28 @@ class TriageFeatureExtractor:
                 elif value > max_norm:
                     features[f"{vital}_anomaly"] = (value - max_norm) / max_norm
                 else:
-                    features[f"{vital}_anomaly"] = 0
-                    
-        if "heart_rate_bpm" in vital_signs and "respiratory_rate_bpm" in vital_signs:
-            features["hr_rr_ratio"] = vital_signs["heart_rate_bpm"] / max(vital_signs["respiratory_rate_bpm"], 1)
-            
-        if "systolic_bp_mmhg" in vital_signs and "diastolic_bp_mmhg" in vital_signs:
-            features["map"] = (vital_signs["systolic_bp_mmhg"] + 2 * vital_signs["diastolic_bp_mmhg"]) / 3
-            features["pulse_pressure"] = vital_signs["systolic_bp_mmhg"] - vital_signs["diastolic_bp_mmhg"]
-            
-        if "oxygen_saturation_pct" in vital_signs:
-            features["hypoxia_severity"] = max(0, 95 - vital_signs["oxygen_saturation_pct"])
-            
+                    features[f"{vital}_anomaly"] = 0.0
+
+        hr = vital_signs.get("heart_rate_bpm", 0.0)
+        rr = vital_signs.get("respiratory_rate_bpm", 1.0)
+        sbp = vital_signs.get("systolic_bp_mmhg", 0.0)
+        dbp = vital_signs.get("diastolic_bp_mmhg", 0.0)
+        spo2 = vital_signs.get("oxygen_saturation_pct", 95.0)
+
+        features["hr_rr_ratio"] = hr / max(rr, 1)
+        features["map"] = (sbp + 2 * dbp) / 3
+        features["pulse_pressure"] = sbp - dbp
+        features["hypoxia_severity"] = max(0, 95 - spo2)
+
         features["embarazo"] = 1 if triage_data.get("embarazo", False) else 0
         features["num_antecedentes"] = len(triage_data.get("antecedentes", []))
-        
+
         transcript = triage_data.get("comentario", "")
         features["transcript_length"] = len(transcript)
         features["transcript_words"] = len(transcript.split())
-        
+
         feature_names = sorted(features.keys())
         feature_vector = np.array([features[name] for name in feature_names])
-        
         return feature_vector.reshape(1, -1)
     
     def get_feature_names(self, triage_data: Dict[str, Any]) -> List[str]:

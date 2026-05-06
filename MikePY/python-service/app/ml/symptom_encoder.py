@@ -28,7 +28,7 @@ class SymptomEncoder:
         self.vectorizer = TfidfVectorizer(
             max_features=100,
             ngram_range=(1, 2),
-            stop_words='spanish'
+            stop_words=None
         )
         self.vectorizer.fit(symptoms_list)
         logger.info(f"Vectorizador entrenado con {len(self.vectorizer.get_feature_names_out())} features")
